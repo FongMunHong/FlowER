@@ -125,6 +125,19 @@ def clean(smi):
     [atom.SetAtomMapNum(0) for atom in mol.GetAtoms()]
     return Chem.MolToSmiles(mol, isomericSmiles=False)
 
+def remove_stereo(smiles: str) -> str:
+    """
+    Return a non-isomeric (stereo-stripped) SMILES.
+    - Removes chiral tags and E/Z bond stereo.
+    - Returns canonical non-isomeric SMILES.
+    """
+    mol = Chem.MolFromSmiles(smiles)
+    if mol is None:
+        raise ValueError(f"Invalid SMILES: {smiles}")
+
+    Chem.RemoveStereochemistry(mol)
+    return Chem.MolToSmiles(mol, isomericSmiles=False, canonical=True)
+
 def beam_search(args, model, flow, frontiers_dict, graph_list):
     smiles_list = [frontier for frontiers in frontiers_dict.values() for frontier in frontiers]
     # print('frontiers', smiles_list)
@@ -224,7 +237,7 @@ def main(args, seed=0):
             if ">>" in line:
                 ori_reactant = line.strip().split(">>")[0]
                 products = line.strip().split(">>")[1].split("|") # major products
-                products = [Chem.MolToSmiles(Chem.MolFromSmiles(smi)) for smi in products]
+                products = [remove_stereo(smi) for smi in products]
             else:
                 ori_reactant = line.strip()
                 products = []
@@ -237,16 +250,18 @@ def main(args, seed=0):
         beam_search(args, attn_model, flow, frontiers_dict, graph_list)
 
         all_results = []
+        os.makedirs(args.result_path, exist_ok=True)
         for beam_idx, (graph, root, (reactant, products)) in enumerate(graph_list):
             # print(output_chunk_idx, reaction)
             check = check_if_successful(graph, products)
             log_rank_0(f"Beam Search Results {beam_idx}: {len(check)}/{len(products)} - {check}")
             all_results.append((graph, root, (reactant, products), check))
 
-        os.makedirs(args.result_path, exist_ok=True)
-        saving_file = os.path.join(args.result_path, f'result_chunk_{i}_s{seed}.pickle')
-        with open(saving_file, "wb") as f_out:
-            pickle.dump(all_results, f_out)
+            if len(check) == len(products):
+                saving_file = os.path.join(args.result_path, f'result_chunk_{i}_s{seed}.pickle')
+                print(f"Saving successful reactions to {saving_file}")
+                with open(saving_file, "wb") as f_out:
+                    pickle.dump(all_results, f_out)
 
 
 if __name__ == "__main__":

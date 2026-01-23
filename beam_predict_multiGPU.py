@@ -123,6 +123,19 @@ def clean(smi):
     [atom.SetAtomMapNum(0) for atom in mol.GetAtoms()]
     return Chem.MolToSmiles(mol, isomericSmiles=False)
 
+def remove_stereo(smiles: str) -> str:
+    """
+    Return a non-isomeric (stereo-stripped) SMILES.
+    - Removes chiral tags and E/Z bond stereo.
+    - Returns canonical non-isomeric SMILES.
+    """
+    mol = Chem.MolFromSmiles(smiles)
+    if mol is None:
+        raise ValueError(f"Invalid SMILES: {smiles}")
+
+    Chem.RemoveStereochemistry(mol)
+    return Chem.MolToSmiles(mol, isomericSmiles=False, canonical=True)
+
 def beam_search(args, model, flow, frontiers_dict, graph_list):
     smiles_list = [frontier for frontiers in frontiers_dict.values() for frontier in frontiers]
     # print('frontiers', smiles_list)
@@ -242,7 +255,7 @@ def worker(rank, args, chunk, chunk_idx, lock, queue):
         if ">>" in line:
             ori_reactant = line.strip().split(">>")[0]
             products = line.strip().split(">>")[1].split("|")
-            products = [Chem.MolToSmiles(Chem.MolFromSmiles(smi)) for smi in products]
+            products = [remove_stereo(smi) for smi in products]
         else:
             ori_reactant = line.strip()
             products = []
