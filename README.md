@@ -1,7 +1,7 @@
 # FlowER: Flow Matching for Electron Redistribution
 _Joonyoung F. Joung*, Mun Hong Fong*, Nicholas Casetti, Jordan P. Liles, Ne S. Dassanayake, Connor W. Coley_
 
-**NOW published in _Nature_!**
+**NOW blossomed in _Nature_!**
 
 “Electron flow matching for generative reaction mechanism prediction.” *Nature* **645**, 115–123 (2025).  
 DOI: [10.1038/s41586-025-09426-9](https://doi.org/10.1038/s41586-025-09426-9)
