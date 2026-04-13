@@ -15,8 +15,8 @@ export VAL_BATCH_SIZE=4096
 export TEST_BATCH_SIZE=4096
 
 export NUM_WORKERS=4
-export CUDA_VISIBLE_DEVICES=0
-export NUM_GPUS_PER_NODE=1
+export CUDA_VISIBLE_DEVICES=0,1,2,3
+export NUM_GPUS_PER_NODE=4
 
 export NUM_NODES=1
 export NODE_RANK=0
@@ -39,9 +39,9 @@ export RESULT_PATH=$PWD/results/$DATA_NAME/$EXP_NAME/
 
 
 export SCALE=4 # smaller sample size during training validation
-# sh scripts/train.sh
+sh scripts/train.sh
 
 export SCALE=1 # larger sample size during testing
 # sh scripts/eval_multiGPU.sh
-sh scripts/search.sh
+#sh scripts/search.sh
 # sh scripts/search_multiGPU.sh

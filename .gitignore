@@ -3,3 +3,4 @@ logs/*
 checkpoints/*
 results/*
 *.pyc
+pyrightconfig.toml
