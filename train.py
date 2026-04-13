@@ -167,14 +167,15 @@ def main(args):
                                 batch_size=args.train_batch_size,
                                 shuffle=True,
                                 epoch=epoch)
+        model.train()
+        model.zero_grad(set_to_none=True)
         for train_batch in train_loader:
             if total_step > args.max_steps:
                 log_rank_0("Max steps reached, finish training")
                 exit(0)
 
             train_batch.to(device)
-            model.train()
-            model.zero_grad(set_to_none=True)
+            
 
             y = train_batch.src_token_ids
             y_len = train_batch.src_lens
@@ -190,13 +191,13 @@ def main(args):
             xt = flow.sample_conditional_pt(x0, x1, t)
             ut = flow.compute_conditional_vector_field(x0_sample, x1)
 
-            if hasattr(model, "module"):
-                model = model.module        # unwrap DDP attn_model to enable accessing attn_model func directly
-            y_emb = model.id2emb(y)
-            vt = model(y_emb, y_len, xt, t)
+            vt = model(y, y_len, xt, t)
 
             loss = (vt - ut) * matrix_masks
-            loss = torch.sum((loss) ** 2) / loss.shape[0]
+            if args.weight_uniform:
+                loss = torch.sum((loss) ** 2) / matrix_masks.sum()
+            else:
+                loss = torch.sum((loss) ** 2) / loss.shape[0]
             (loss / args.accumulation_count).backward()
             losses.append(loss.item())
 

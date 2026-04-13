@@ -85,3 +85,6 @@ class Args:
     nbest = 3
     max_depth = 15
     chunk_size = 50
+
+    # Testing uniform weighting #
+    weight_uniform = True

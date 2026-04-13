@@ -298,13 +298,14 @@ class AttnEncoderXL(nn.Module):
     def id2emb(self, src_token_id):
         return self.atom_embedding(src_token_id)
         
-    def forward(self, src, lengths, bond_matrix, timestep):
+    def forward(self, src_token_ids, lengths, bond_matrix, timestep):
         """adapt from onmt TransformerEncoder
             src_token_id: (b, t, h)
             lengths: (b,)
 
             NEW on Jan'23: return: (b, t, h)
         """
+        src = self.id2emb(src_token_ids)
         if timestep.dim() == 0:
             timestep = timestep.repeat(lengths.shape[0])
 
