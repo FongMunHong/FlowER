@@ -1,6 +1,9 @@
 data/*
+data
 logs/*
 checkpoints/*
+checkpoints
 results/*
+results
 *.pyc
 pyrightconfig.toml

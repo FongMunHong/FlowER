@@ -293,7 +293,7 @@ class AttnEncoderXL(nn.Module):
         for _ in range(self.post_processing_layers):
             rbf_layers.append(Block(self.rbf.dim))
         self.rbf_linear = torch.nn.Sequential(*rbf_layers)
-        self.rbf_final_linear = torch.nn.Linear(self.rbf.dim, 1)
+        # self.rbf_final_linear = torch.nn.Linear(self.rbf.dim, 1)
 
     def id2emb(self, src_token_id):
         return self.atom_embedding(src_token_id)

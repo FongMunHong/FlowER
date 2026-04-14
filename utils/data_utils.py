@@ -265,11 +265,10 @@ class ReactionDataset(Dataset):
     def parse_data_parallel(self):
 
         p = Pool(cpu_count())
-        results = p.imap(process_smiles, ((smiles) for smiles in self.smiles_list))
-        p.close()
-        p.join()
+        results = p.imap(process_smiles, self.smiles_list)
 
-        # Prepare the final data structures
+        # Consume results before closing pool to avoid deadlock:
+        # workers block on a full pipe if results aren't drained first.
         count = 0
         total = 0
         for result in results:
@@ -286,6 +285,8 @@ class ReactionDataset(Dataset):
             self.src_lens.append(result['src_len'])
             self.tgt_lens.append(result['tgt_len'])
 
+        p.close()
+        p.join()
         print(f"{count*100/total}% data is unparseable")
 
     def sort(self):

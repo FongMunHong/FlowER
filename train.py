@@ -213,7 +213,7 @@ def main(args):
                            f"p_norm: {param_norm(model): .4f}, g_norm: {g_norm: .4f}, "
                            f"lr: {get_lr(optimizer): .6f}, "
                            f"elapsed time: {time.time() - o_start: .0f}")
-                losses, acc = [], []
+                losses, accs = [], []
 
             if (accum == 0) and (total_step > 0) and (total_step % args.eval_iter == 0):
                 val_count = 50
@@ -221,7 +221,7 @@ def main(args):
                                         batch_size=args.val_batch_size,
                                         shuffle=True,
                                         epoch=epoch)
-                from eval_multiGPU import get_predictions
+                from eval_multiGPU import get_predictions # Circular import !?
                 metrics = get_predictions(args, model, flow, val_loader, val_count)
                 if dist.get_rank() == 0:
                     metrics = np.array(metrics)
