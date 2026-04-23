@@ -52,7 +52,8 @@ class RBFExpansion(nn.Module):
         self.dim = len(self.centers)
 
     def forward(self, matrix, matrix_mask):
-        matrix = matrix.masked_fill(matrix_mask, 1e9)
+        #matrix = matrix.masked_fill(matrix_mask, 1e9)
+        matrix = matrix.masked_fill(matrix_mask, torch.inf)
         matrix = matrix.unsqueeze(-1)  # Add a new dimension at the end
         # Compute the RBF
         matrix = matrix - self.centers
@@ -152,7 +153,8 @@ class MultiHeadedRelAttention(nn.Module):
         scores = scores.float()
 
         mask = mask.unsqueeze(1)                            # (B, 1, 1, T_values)
-        scores = scores.masked_fill(mask, -1e18)
+        #scores = scores.masked_fill(mask, -1e18)
+        scores = scores.masked_fill(mask, -torch.inf)
 
         # 3) Apply attention dropout and compute context vectors.
         attn = self.softmax(scores)
@@ -348,8 +350,10 @@ class AttnEncoderXL(nn.Module):
         value_diag = self.value_diag_w(a_i)             # b,n,d @ d,d -> b,n,d
 
         diag_scores = torch.matmul(query_diag, key_diag.transpose(1, 2)) # b,n,d @ b,d,n -> b,n,n
-        diag_scores = diag_scores.masked_fill(matrix_masks, 1e-9)
-        diag_scores = self.softmax(diag_scores) / math.sqrt(self.d_model)
+        #diag_scores = diag_scores.masked_fill(matrix_masks, 1e-9) # This looks quite wrong to me
+        diag_scores = diag_scores.masked_fill(matrix_masks, -torch.inf)
+        #diag_scores = self.softmax(diag_scores) / math.sqrt(self.d_model)
+        diag_scores = self.softmax(diag_scores / math.sqrt(self.d_model)) #yikes
         context = torch.matmul(diag_scores, value_diag)    # b,n,n @ b,n,d -> b,n,d
         diag = self.final_diag_w(context).view(b, n)       # b,n,d @ d,1 -> b,n,1 -> b,n
         

@@ -48,11 +48,12 @@ class Args:
     rel_pos = "emb_only"
     shared_attention_layer = 0
     sigma = float(os.environ.get("SIGMA"))
-    train_batch_size = (TRAIN_BATCH_SIZE / ACCUMULATION_COUNT / NUM_GPU / NUM_NODES)
-    val_batch_size = (VAL_BATCH_SIZE / ACCUMULATION_COUNT / NUM_GPU / NUM_NODES)
+    train_batch_size = (TRAIN_BATCH_SIZE // ACCUMULATION_COUNT // NUM_GPU // NUM_NODES)
+    val_batch_size = (VAL_BATCH_SIZE // ACCUMULATION_COUNT // NUM_GPU // NUM_NODES)
     test_batch_size = TEST_BATCH_SIZE
     batch_type = "tokens_sum"
-    lr = 0.0001
+    #lr = 0.0001
+    lr = 0.0003 #Since we increaseso  the batch 3x
     beta1 = 0.9
     beta2 = 0.998
     eps = 1e-9

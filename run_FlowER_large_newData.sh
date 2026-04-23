@@ -2,7 +2,7 @@
 
 
 export DATA_NAME="flower_new_dataset"
-export EXP_NAME="best_large_hyperparam_no_fixes"
+export EXP_NAME="best_large_hyperparam"
 export EMB_DIM=256
 export RBF_HIGH=12
 export RBF_GAP=0.1
@@ -10,8 +10,10 @@ export SIGMA=0.15
 
 export MODEL_NAME="" # your trained checkpoint here
 
-export TRAIN_BATCH_SIZE=2048
-export VAL_BATCH_SIZE=2048
+# Might be worth changing to 8192.
+# Also think about adding some accumulation steps to make effective batches even bigger.
+export TRAIN_BATCH_SIZE=6144
+export VAL_BATCH_SIZE=6144
 export TEST_BATCH_SIZE=4096
 
 export NUM_WORKERS=4
