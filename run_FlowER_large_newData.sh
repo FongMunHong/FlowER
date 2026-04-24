@@ -12,7 +12,7 @@ export MODEL_NAME="model.2760000_91.pt" # your trained checkpoint here
 
 export TRAIN_BATCH_SIZE=2048
 export VAL_BATCH_SIZE=2048
-export TEST_BATCH_SIZE=4096
+export TEST_BATCH_SIZE=3072
 
 export NUM_WORKERS=4
 export CUDA_VISIBLE_DEVICES=0,1
