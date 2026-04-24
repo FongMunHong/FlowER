@@ -7,3 +7,6 @@ results/*
 results
 *.pyc
 pyrightconfig.toml
+
+scripts/eng.sh
+

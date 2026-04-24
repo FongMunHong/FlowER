@@ -1,5 +1,6 @@
 
 import os
+import sys #### REMOVE AFTER DEBUG ####
 import glob
 import datetime
 import torch
@@ -99,11 +100,10 @@ def predict_batch(args, batch_idx, data_batch, model, flow, split, rand_matrix=N
         torch.cuda.empty_cache()
 
         y_repeated = y.repeat_interleave(sample_size, dim=0)
-        y_emb_repeated = model.id2emb(y_repeated)
         y_len_batch_repeated = y_len.repeat_interleave(sample_size, dim=0)
         
         traj_list = torchdiffeq.odeint_adjoint(
-            lambda t, x: model.forward(y_emb_repeated, y_len_batch_repeated, x, t),
+            lambda t, x: model.forward(y_repeated, y_len_batch_repeated, x, t),
             x0_sample_repeated,
             torch.linspace(0, 1, 2).to(args.device),
             atol=1e-4,
@@ -244,10 +244,30 @@ def get_predictions(args, model, flow, data_loader, iter_count=np.inf, write_o=N
 
 
 def main(args):
+    ### DEBUG — print BEFORE any CUDA call so nothing can swallow it ###
+    sys.stderr.write(
+        f"[DEBUG PRE-INIT rank={args.local_rank}] "
+        f"device_count={torch.cuda.device_count()} "
+        f"CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES')!r} "
+        f"SLURM_JOB_GPUS={os.environ.get('SLURM_JOB_GPUS')!r} "
+        f"SLURM_STEP_GPUS={os.environ.get('SLURM_STEP_GPUS')!r} "
+        f"GPU_DEVICE_ORDINAL={os.environ.get('GPU_DEVICE_ORDINAL')!r} "
+        f"LOCAL_RANK={os.environ.get('LOCAL_RANK')!r} "
+        f"RANK={os.environ.get('RANK')!r} "
+        f"WORLD_SIZE={os.environ.get('WORLD_SIZE')!r}\n"
+    )
+    sys.stderr.flush()
+    ### END DEBUG ###
     args.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     device = args.device
     if args.local_rank != -1:
         dist.init_process_group(backend=args.backend, init_method='env://', timeout=datetime.timedelta(0, 7200))
+        sys.stderr.write(
+            f"[DEBUG POST-INIT rank={args.local_rank}] "
+            f"device_count={torch.cuda.device_count()} "
+            f"CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES')!r}\n"
+        )
+        sys.stderr.flush()
         torch.cuda.set_device(args.local_rank)
         torch.backends.cudnn.benchmark = True
 
