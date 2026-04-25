@@ -90,3 +90,8 @@ class Args:
 
     # Testing uniform weighting #
     weight_uniform = True
+
+    # monte-carlo flask sampling #
+    mc_packet_size = int(os.environ.get("MC_PACKET_SIZE", 2))
+    mc_max_iter    = int(os.environ.get("MC_MAX_ITER", 10))
+    mc_seed        = int(os.environ.get("MC_SEED", 42))
