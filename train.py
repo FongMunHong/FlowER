@@ -187,17 +187,15 @@ def main(args):
             x0_sample = flow.sample_be_matrix(x0)
 
             t = torch.rand(x0.shape[0]).type_as(x0)
-            
+
             xt = flow.sample_conditional_pt(x0, x1, t)
             ut = flow.compute_conditional_vector_field(x0_sample, x1)
 
             vt = model(y, y_len, xt, t)
-
             loss = (vt - ut) * matrix_masks
-            if args.weight_uniform:
-                loss = torch.sum((loss) ** 2) / matrix_masks.sum()
-            else:
-                loss = torch.sum((loss) ** 2) / loss.shape[0]
+            #loss = torch.sum((loss) ** 2) / matrix_masks.sum()  # per-valid-entry
+            loss = torch.sum((loss) ** 2) / loss.shape[0]       # per-sample
+            
             (loss / args.accumulation_count).backward()
             losses.append(loss.item())
 

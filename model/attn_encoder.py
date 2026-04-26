@@ -348,8 +348,9 @@ class AttnEncoderXL(nn.Module):
         value_diag = self.value_diag_w(a_i)             # b,n,d @ d,d -> b,n,d
 
         diag_scores = torch.matmul(query_diag, key_diag.transpose(1, 2)) # b,n,d @ b,d,n -> b,n,n
-        diag_scores = diag_scores.masked_fill(matrix_masks, 1e-9)
-        diag_scores = self.softmax(diag_scores) / math.sqrt(self.d_model)
+        #diag_scores = diag_scores.masked_fill(matrix_masks, 1e-9)
+        diag_scores = diag_scores.masked_fill(matrix_masks, -1e18)
+        diag_scores = self.softmax(diag_scores / math.sqrt(self.d_model))
         context = torch.matmul(diag_scores, value_diag)    # b,n,n @ b,n,d -> b,n,d
         diag = self.final_diag_w(context).view(b, n)       # b,n,d @ d,1 -> b,n,1 -> b,n
         
@@ -363,10 +364,7 @@ class AttnEncoderXL(nn.Module):
         rbfw_ij = self.rel_emb_w(rel_emb).view(b, n, n)   # b,n,n,d @ d,1 -> b,n,n,1 -> b,n,n
         out = a_ij + rbfw_ij
 
-        for i in range(b):
-            indices = torch.arange(n)
-            out[i, indices, indices] = 0
-            out[i].diagonal().add_(diag[i])
+        out = torch.diagonal_scatter(out, diag, dim1=-2, dim2=-1)
 
         out = zero_center_output(out, matrix_masks)
         out = (out + out.transpose(1, 2))
