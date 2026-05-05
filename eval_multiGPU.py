@@ -99,11 +99,10 @@ def predict_batch(args, batch_idx, data_batch, model, flow, split, rand_matrix=N
         torch.cuda.empty_cache()
 
         y_repeated = y.repeat_interleave(sample_size, dim=0)
-        y_emb_repeated = model.id2emb(y_repeated)
         y_len_batch_repeated = y_len.repeat_interleave(sample_size, dim=0)
-        
+
         traj_list = torchdiffeq.odeint_adjoint(
-            lambda t, x: model.forward(y_emb_repeated, y_len_batch_repeated, x, t),
+            lambda t, x: model(y_repeated, y_len_batch_repeated, x, t),
             x0_sample_repeated,
             torch.linspace(0, 1, 2).to(args.device),
             atol=1e-4,
