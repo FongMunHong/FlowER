@@ -24,19 +24,6 @@ bt_to_electron = {Chem.rdchem.BondType.SINGLE: 2,
 
 tbl = Chem.GetPeriodicTable()
 
-def count_electrons(map_number:int, smiles: str) -> int:
-    """
-    Count the electrons on an atom.  This will create a BE matrix of the
-
-    Input: 
-        map_number (int) : atom of which you want the electron count
-        smiles (str) : atom-mapped smiles.
-
-    """
-    pass
-
-
-
 
 def bond_features(bond):
     bt = bond.GetBondType()
