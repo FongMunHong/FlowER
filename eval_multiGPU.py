@@ -1,6 +1,5 @@
 
 import os
-import sys #### REMOVE AFTER DEBUG ####
 import glob
 import datetime
 import torch
@@ -248,12 +247,6 @@ def main(args):
     device = args.device
     if args.local_rank != -1:
         dist.init_process_group(backend=args.backend, init_method='env://', timeout=datetime.timedelta(0, 7200))
-        sys.stderr.write(
-            f"[DEBUG POST-INIT rank={args.local_rank}] "
-            f"device_count={torch.cuda.device_count()} "
-            f"CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES')!r}\n"
-        )
-        sys.stderr.flush()
         torch.cuda.set_device(args.local_rank)
         torch.backends.cudnn.benchmark = True
 
