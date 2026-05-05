@@ -8,7 +8,7 @@ export RBF_HIGH=12
 export RBF_GAP=0.1
 export SIGMA=0.15
 
-export MODEL_NAME="model.840000_27.pt" # your trained checkpoint here
+export MODEL_NAME="model.294000_97.pt" # your trained checkpoint here
 
 export TRAIN_BATCH_SIZE=8192
 export VAL_BATCH_SIZE=8192

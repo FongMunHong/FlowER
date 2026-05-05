@@ -1,6 +1,7 @@
 data/*
 data
 logs/*
+logs
 checkpoints/*
 checkpoints
 results/*
@@ -9,6 +10,4 @@ results
 pyrightconfig.toml
 
 scripts/eng.sh
-
-docs/
-superpowers/
+scripts/train_eng.sh
