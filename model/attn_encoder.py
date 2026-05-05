@@ -52,7 +52,8 @@ class RBFExpansion(nn.Module):
         self.dim = len(self.centers)
 
     def forward(self, matrix, matrix_mask):
-        matrix = matrix.masked_fill(matrix_mask, 1e9)
+        #matrix = matrix.masked_fill(matrix_mask, 1e9)
+        matrix = matrix.masked_fill(matrix_mask, torch.inf)
         matrix = matrix.unsqueeze(-1)  # Add a new dimension at the end
         # Compute the RBF
         matrix = matrix - self.centers
@@ -152,7 +153,8 @@ class MultiHeadedRelAttention(nn.Module):
         scores = scores.float()
 
         mask = mask.unsqueeze(1)                            # (B, 1, 1, T_values)
-        scores = scores.masked_fill(mask, -1e18)
+        #scores = scores.masked_fill(mask, -1e18)
+        scores = scores.masked_fill(mask, -torch.inf)
 
         # 3) Apply attention dropout and compute context vectors.
         attn = self.softmax(scores)

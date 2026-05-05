@@ -24,6 +24,20 @@ bt_to_electron = {Chem.rdchem.BondType.SINGLE: 2,
 
 tbl = Chem.GetPeriodicTable()
 
+def count_electrons(map_number:int, smiles: str) -> int:
+    """
+    Count the electrons on an atom.  This will create a BE matrix of the
+
+    Input: 
+        map_number (int) : atom of which you want the electron count
+        smiles (str) : atom-mapped smiles.
+
+    """
+    pass
+
+
+
+
 def bond_features(bond):
     bt = bond.GetBondType()
     
@@ -292,9 +306,11 @@ class ReactionDataset(Dataset):
     def sort(self):
         self.data_indices = np.argsort(self.src_lens)
 
-    def shuffle_in_bucket(self, bucket_size: int):
+    # Added a seed here so shuffle works on distributed workers
+    def shuffle_in_bucket(self, bucket_size: int, seed: int = 0):
+        rng = np.random.RandomState(seed)
         for i in range(0, self.data_size, bucket_size):
-            np.random.shuffle(self.data_indices[i:i + bucket_size])
+            rng.shuffle(self.data_indices[i:i + bucket_size])
 
     def batch(self, batch_type: str, batch_size: int, verbose=False):
 

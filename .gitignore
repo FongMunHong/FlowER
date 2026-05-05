@@ -10,3 +10,5 @@ pyrightconfig.toml
 
 scripts/eng.sh
 
+docs/
+superpowers/

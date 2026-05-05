@@ -73,8 +73,11 @@ def init_model(args):
 
 def init_loader(args, dataset, batch_size: int, bucket_size: int = 1000,
                 shuffle: bool = False, epoch: int = None, use_sort: bool =True):
+    seed: int = 0 if epoch is None else epoch
     if use_sort: dataset.sort()
-    if shuffle: dataset.shuffle_in_bucket(bucket_size=bucket_size)
+    if shuffle: 
+        dataset.shuffle_in_bucket(bucket_size=bucket_size, seed=seed)
+    
     dataset.batch(
         batch_type=args.batch_type,
         batch_size=batch_size
@@ -163,6 +166,7 @@ def main(args):
     accuracy = []
     for epoch in range(args.epoch):
         log_rank_0(f"Epoch: {epoch}")
+
         train_loader = init_loader(args, train_dataset,
                                 batch_size=args.train_batch_size,
                                 shuffle=True,
@@ -219,7 +223,7 @@ def main(args):
                                         batch_size=args.val_batch_size,
                                         shuffle=True,
                                         epoch=epoch)
-                from eval_multiGPU import get_predictions # Circular import !?
+                from eval_multiGPU import get_predictions
                 metrics = get_predictions(args, model, flow, val_loader, val_count)
                 if dist.get_rank() == 0:
                     metrics = np.array(metrics)
