@@ -8,11 +8,11 @@ export RBF_HIGH=12
 export RBF_GAP=0.1
 export SIGMA=0.15
 
-export MODEL_NAME="model.294000_97.pt" # your trained checkpoint here
+export MODEL_NAME="model.2940000_97.pt" # your trained checkpoint here
 
 export TRAIN_BATCH_SIZE=8192
 export VAL_BATCH_SIZE=8192
-export TEST_BATCH_SIZE=3072
+export TEST_BATCH_SIZE=2048
 
 export NUM_WORKERS=8
 export CUDA_VISIBLE_DEVICES=0,1
@@ -37,10 +37,10 @@ export RESULT_PATH=$PWD/results/$DATA_NAME/$EXP_NAME/
 # [ -f $TEST_FILE ] || { echo $TEST_FILE does not exist; exit; }
 
 
-export SCALE=4 # smaller sample size during training validation
-sh scripts/train.sh
+#export SCALE=4 # smaller sample size during training validation
+#sh scripts/train.sh
 
-#export SCALE=1 # larger sample size during testing
-#sh scripts/eval_multiGPU.sh
+export SCALE=1 # larger sample size during testing
+sh scripts/eval_multiGPU.sh
 #sh scripts/search.sh
 #sh scripts/search_multiGPU.sh
