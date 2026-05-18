@@ -50,9 +50,11 @@ def select(args, frontiers_dict, graph_list):
 
 def expand(args, model, flow, data_loader):
     sample_size = args.sample_size
+    model.eval()
 
     overall_dict = {}
-    for batch_idx, data_batch in enumerate(data_loader):
+    with torch.no_grad():
+     for batch_idx, data_batch in enumerate(data_loader):
         # print(data_batch.src_matrices.shape)
         data_batch.to(args.device)
         src_data_indices = data_batch.src_data_indices
@@ -64,6 +66,7 @@ def expand(args, model, flow, data_loader):
 
         batch_size, n, n = x0.shape
 
+        # FIX# missing model.eval() and torch.no_grad() — gradients are being tracked during inference
         if (batch_size*n*n) <= 5*360*360:
             traj_list = predict_batch(args, batch_idx, data_batch, model, flow, 1)
         else:

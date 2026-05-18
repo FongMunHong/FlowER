@@ -1,5 +1,13 @@
 data/*
+data
 logs/*
+logs
 checkpoints/*
+checkpoints
 results/*
+results
 *.pyc
+pyrightconfig.toml
+
+scripts/eng.sh
+scripts/train_eng.sh

@@ -73,8 +73,11 @@ def init_model(args):
 
 def init_loader(args, dataset, batch_size: int, bucket_size: int = 1000,
                 shuffle: bool = False, epoch: int = None, use_sort: bool =True):
+    seed: int = 0 if epoch is None else epoch
     if use_sort: dataset.sort()
-    if shuffle: dataset.shuffle_in_bucket(bucket_size=bucket_size)
+    if shuffle: 
+        dataset.shuffle_in_bucket(bucket_size=bucket_size, seed=seed)
+    
     dataset.batch(
         batch_type=args.batch_type,
         batch_size=batch_size
@@ -163,18 +166,20 @@ def main(args):
     accuracy = []
     for epoch in range(args.epoch):
         log_rank_0(f"Epoch: {epoch}")
+
         train_loader = init_loader(args, train_dataset,
                                 batch_size=args.train_batch_size,
                                 shuffle=True,
                                 epoch=epoch)
+        model.train()
+        model.zero_grad(set_to_none=True)
         for train_batch in train_loader:
             if total_step > args.max_steps:
                 log_rank_0("Max steps reached, finish training")
                 exit(0)
 
             train_batch.to(device)
-            model.train()
-            model.zero_grad(set_to_none=True)
+            
 
             y = train_batch.src_token_ids
             y_len = train_batch.src_lens
@@ -186,17 +191,15 @@ def main(args):
             x0_sample = flow.sample_be_matrix(x0)
 
             t = torch.rand(x0.shape[0]).type_as(x0)
-            
+
             xt = flow.sample_conditional_pt(x0, x1, t)
             ut = flow.compute_conditional_vector_field(x0_sample, x1)
 
-            if hasattr(model, "module"):
-                model = model.module        # unwrap DDP attn_model to enable accessing attn_model func directly
-            y_emb = model.id2emb(y)
-            vt = model(y_emb, y_len, xt, t)
-
+            vt = model(y, y_len, xt, t)
             loss = (vt - ut) * matrix_masks
-            loss = torch.sum((loss) ** 2) / loss.shape[0]
+            #loss = torch.sum((loss) ** 2) / matrix_masks.sum()  # per-valid-entry
+            loss = torch.sum((loss) ** 2) / loss.shape[0]       # per-sample
+            
             (loss / args.accumulation_count).backward()
             losses.append(loss.item())
 
@@ -212,7 +215,7 @@ def main(args):
                            f"p_norm: {param_norm(model): .4f}, g_norm: {g_norm: .4f}, "
                            f"lr: {get_lr(optimizer): .6f}, "
                            f"elapsed time: {time.time() - o_start: .0f}")
-                losses, acc = [], []
+                losses, accs = [], []
 
             if (accum == 0) and (total_step > 0) and (total_step % args.eval_iter == 0):
                 val_count = 50

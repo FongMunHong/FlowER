@@ -24,6 +24,7 @@ bt_to_electron = {Chem.rdchem.BondType.SINGLE: 2,
 
 tbl = Chem.GetPeriodicTable()
 
+
 def bond_features(bond):
     bt = bond.GetBondType()
     
@@ -265,11 +266,10 @@ class ReactionDataset(Dataset):
     def parse_data_parallel(self):
 
         p = Pool(cpu_count())
-        results = p.imap(process_smiles, ((smiles) for smiles in self.smiles_list))
-        p.close()
-        p.join()
+        results = p.imap(process_smiles, self.smiles_list)
 
-        # Prepare the final data structures
+        # Consume results before closing pool to avoid deadlock:
+        # workers block on a full pipe if results aren't drained first.
         count = 0
         total = 0
         for result in results:
@@ -286,14 +286,18 @@ class ReactionDataset(Dataset):
             self.src_lens.append(result['src_len'])
             self.tgt_lens.append(result['tgt_len'])
 
+        p.close()
+        p.join()
         print(f"{count*100/total}% data is unparseable")
 
     def sort(self):
         self.data_indices = np.argsort(self.src_lens)
 
-    def shuffle_in_bucket(self, bucket_size: int):
+    # Added a seed here so shuffle works on distributed workers
+    def shuffle_in_bucket(self, bucket_size: int, seed: int = 0):
+        rng = np.random.RandomState(seed)
         for i in range(0, self.data_size, bucket_size):
-            np.random.shuffle(self.data_indices[i:i + bucket_size])
+            rng.shuffle(self.data_indices[i:i + bucket_size])
 
     def batch(self, batch_type: str, batch_size: int, verbose=False):
 
