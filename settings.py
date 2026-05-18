@@ -81,7 +81,7 @@ class Args:
     do_validate = False
 
     # beam-search #
-    beam_size = 5
-    nbest = 3
+    beam_size = 10
+    nbest = 10
     max_depth = 15
     chunk_size = 50

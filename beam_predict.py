@@ -3,6 +3,7 @@ import datetime
 import torch
 import numpy as np
 from rdkit import Chem
+from rdkit.Chem import AllChem, DataStructs
 from utils.data_utils import ReactionDataset, BEmatrix_to_mol, ps
 import torch.distributed as dist
 from train import init_model, init_loader
@@ -189,14 +190,47 @@ def beam_search(args, model, flow, frontiers_dict, graph_list):
     filtered_frontiers_dict = select(args, new_frontiers_dict, graph_list)
     beam_search(args, model, flow, filtered_frontiers_dict, graph_list)
 
+def get_fp(smi):
+    mol = Chem.MolFromSmiles(smi)
+    if mol is None:
+        return None
+    return AllChem.GetMorganFingerprintAsBitVect(mol, radius=2, nBits=2048)
+
 def check_if_successful(graph, products):
-    nodes_with_loops = list(nx.nodes_with_selfloops(graph))
-    achieved_products = set()
-    for node in graph.nodes():
-        node_in_products = set(clean(node).split('.')) & set(products)
-        if node_in_products and node in nodes_with_loops:
-            achieved_products.update(node_in_products)
-    return achieved_products
+    """
+    Returns dict:
+      'exact'         - set of products matched exactly at a terminal node
+      'best_tanimoto' - {product: (similarity, closest_node_smiles)} searched over all nodes
+    """
+    terminal_nodes = set(nx.nodes_with_selfloops(graph))
+    all_nodes = list(graph.nodes())
+    node_clean_map = {n: clean(n) for n in all_nodes}
+
+    exact = set()
+    best_tanimoto = {}
+
+    for product in products:
+        prod_fp = get_fp(product)
+        best_sim, best_node = 0.0, None
+
+        for node in terminal_nodes:
+            if product in set(node_clean_map[node].split('.')):
+                exact.add(product)
+
+        for node in all_nodes:
+            if not prod_fp:
+                continue
+            components = node_clean_map[node].split('.')
+            for component in components:
+                fp = get_fp(component)
+                if fp:
+                    sim = DataStructs.TanimotoSimilarity(prod_fp, fp)
+                    if sim > best_sim:
+                        best_sim, best_node = sim, component  # return original
+
+        best_tanimoto[product] = (best_sim, best_node)
+
+    return {'exact': exact, 'best_tanimoto': best_tanimoto}
 
 def main(args, seed=0):
     args.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -254,10 +288,14 @@ def main(args, seed=0):
         for beam_idx, (graph, root, (reactant, products)) in enumerate(graph_list):
             # print(output_chunk_idx, reaction)
             check = check_if_successful(graph, products)
-            log_rank_0(f"Beam Search Results {beam_idx}: {len(check)}/{len(products)} - {check}")
+            exact = check['exact']
+            log_rank_0(f"Beam Search Results {beam_idx}: {len(exact)}/{len(products)} - exact={exact}")
+            for prod, (sim, node) in check['best_tanimoto'].items():
+                status = "EXACT" if prod in exact else f"best_tanimoto={sim:.3f}"
+                log_rank_0(f"  [{status}] target={prod}  closest={node}")
             all_results.append((graph, root, (reactant, products), check))
 
-            if len(check) == len(products):
+            if len(exact) == len(products):
                 saving_file = os.path.join(args.result_path, f'result_chunk_{i}_s{seed}.pickle')
                 print(f"Saving successful reactions to {saving_file}")
                 with open(saving_file, "wb") as f_out:
