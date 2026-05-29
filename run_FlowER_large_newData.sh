@@ -2,7 +2,7 @@
 
 
 export DATA_NAME="flower_new_dataset"
-export EXP_NAME="best_large_hyperparam_attn_fixes"
+export EXP_NAME="best_large_hyperparam"
 export EMB_DIM=256
 export RBF_HIGH=12
 export RBF_GAP=0.1
@@ -43,4 +43,3 @@ export RESULT_PATH=$PWD/results/$DATA_NAME/$EXP_NAME/
 export SCALE=1 # larger sample size during testing
 sh scripts/eval_multiGPU.sh
 #sh scripts/search.sh
-#sh scripts/search_multiGPU.sh

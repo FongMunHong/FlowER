@@ -6,7 +6,7 @@ EXP_NAME = os.environ.get("EXP_NAME", "")
 
 SCALE = int(os.environ.get("SCALE", 4)) # train & val
 # SCALE = 1 # test
-SAMPLE_SIZE = 64 // SCALE
+SAMPLE_SIZE = int(os.environ.get("SAMPLE_SIZE", 64 // SCALE))
 NUM_GPU = int(os.environ.get("NUM_GPUS_PER_NODE", 1))
 
 
@@ -82,7 +82,7 @@ class Args:
     do_validate = False
 
     # beam-search #
-    beam_size = 10
-    nbest = 10
-    max_depth = 15
-    chunk_size = 50
+    beam_size = int(os.environ.get("BEAM_SIZE", 5))
+    nbest = int(os.environ.get("NBEST", 3))
+    max_depth = int(os.environ.get("MAX_DEPTH", 15))
+    chunk_size = int(os.environ.get("CHUNK_SIZE", 50))

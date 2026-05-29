@@ -9,5 +9,4 @@ results
 *.pyc
 pyrightconfig.toml
 
-scripts/eng.sh
-scripts/train_eng.sh
+old/*

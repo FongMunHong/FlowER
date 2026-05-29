@@ -6,6 +6,23 @@ _Joonyoung F. Joung*, Mun Hong Fong*, Nicholas Casetti, Jordan P. Liles, Ne S. D
 “Electron flow matching for generative reaction mechanism prediction.” *Nature* **645**, 115–123 (2025).  
 DOI: [10.1038/s41586-025-09426-9](https://doi.org/10.1038/s41586-025-09426-9)
 
+---
+
+## 🔔 [Update — May 29 2026]
+
+This release uses **only the new-data checkpoint**, and the file layout described below reflects this new workflow.
+
+**Want the version published in _Nature_?** Make sure you have **already cloned this repository** first, then fetch the tags and check out `2.0.0`:
+
+```bash
+git fetch --tags
+git checkout tags/2.0.0
+```
+
+> **Note:** You must clone the repository first before running the commands above.
+
+---
+
 ![Alt Text](FlowER.png)
 
 FlowER uses flow matching to model chemical reaction as a process of electron redistribution, conceptually
@@ -26,25 +43,25 @@ $ pip install -r requirements.txt
 
 ## Data/Model preparation
 FlowER is trained on a combination of subset of USPTO-FULL (Dai et al.), RmechDB and PmechDB (Baldi et al.). <br>
-To retrain/reproduce FlowER, download `data.zip` and `checkpoints.zip` folder from [this link](https://figshare.com/articles/dataset/FlowER_-_Mechanistic_datasets_and_model_checkpoint/28359407/3), and unzip them, and place under `FlowER/` <br>
+To retrain/reproduce FlowER, download `data.zip` and `checkpoints.zip` from [this link](https://doi.org/10.6084/m9.figshare.32513667), unzip them, and place under `FlowER/`. <br>
 The folder structure for the `data` folder is `data/{DATASET_NAME}/{train,val,test}.txt` and `checkpoints` folder is `checkpoints/{DATASET_NAME}/{EXPERIMENT_NAME}/model.{STEP}_{IDX}.pt`
 
 ## On how FlowER is structured
-The workflow of FlowER revolves mainly around 2 files. `run_FlowER_large_(old|new)Data.sh` and `settings.py`. <br> 
+The workflow of FlowER revolves mainly around 2 files. `run_FlowER_large_newData.sh` and `settings.py`. <br> 
 The main idea is to use comments `#` to turn on/off configurations when training/validating/inferencing FlowER. <br>
-`run_FlowER_large_(old|new)Data.sh` allows user to specify your data folder name, experiment name, gpu configuration and choose which scripts to run. <br>
+`run_FlowER_large_newData.sh` allows user to specify your data folder name, experiment name, gpu configuration and choose which scripts to run. <br>
 `settings.py` allows user to specify different configurations for different workflows. 
 
 ## Training Pipeline
 ### 1. Train FlowER
-Ensure that `data/` folder is populated accordingly and `run_FlowER_large_(old|new)Data.sh` is pointing to the correct files.
+Ensure that `data/` folder is populated accordingly and `run_FlowER_large_newData.sh` is pointing to the correct files.
 ```
 export TRAIN_FILE=$PWD/data/$DATA_NAME/train.txt
 export VAL_FILE=$PWD/data/$DATA_NAME/val.txt
 ```
-Check `run_FlowER_large_(old|new)Data.sh` has `scripts/train.sh` uncommented. 
+Check `run_FlowER_large_newData.sh` has `scripts/train.sh` uncommented. 
 ```bash
-$ sh run_FlowER_large_(old|new)Data.sh
+$ sh run_FlowER_large_newData.sh
 ```
 
 ### 2. Validate FlowER
@@ -55,9 +72,9 @@ You can validate FlowER on the validation set. Then, in `settings.py`, ensure th
     steps2validate =  ["1050000", "1320000", "1500000", "930000", "1020000"]
 ```
 `steps2validate` refers to the checkpoints that are selected based on train logs situated at the `/logs` folder. <br>
-Check `run_FlowER_large_(old|new)Data.sh` has `scripts/eval.sh` uncommented. 
+Check `run_FlowER_large_newData.sh` has `scripts/eval.sh` uncommented. 
 ```bash
-$ sh run_FlowER_large_(old|new)Data.sh
+$ sh run_FlowER_large_newData.sh
 ```
 
 
@@ -67,9 +84,9 @@ You can validate FlowER on the test set. Then, in `settings.py`, specify your ch
     # inference #
     do_validate = False
 ```
-Check `run_FlowER_large_(old|new)Data.sh` has `scripts/eval.sh` uncommented. 
+Check `run_FlowER_large_newData.sh` has `scripts/eval.sh` uncommented. 
 ```bash
-$ sh run_FlowER_large_(old|new)Data.sh
+$ sh run_FlowER_large_newData.sh
 ```
 
 #### FlowER train/valid/test input
@@ -116,8 +133,8 @@ An elementary reaction step reaction follows the format of `mapped_reaction|sequ
 </details>
 
 ### 4. Use FlowER for search
-FlowER mainly uses beam search to seek for plausible mechanistic pathways. Users can input their smiles at `data/flower_dataset/beam.txt`. <br>
-Ensure that in `run_FlowER_large_(old|new)Data.sh`, the `TEST_FILE` variable is pointing towards the correct file.
+FlowER mainly uses beam search to seek for plausible mechanistic pathways. Users can input their smiles at `data/flower_new_dataset/beam.txt`. <br>
+Ensure that in `run_FlowER_large_newData.sh`, the `TEST_FILE` variable is pointing towards the correct file.
 ```
 export TEST_FILE=$PWD/data/$DATA_NAME/beam.txt
 ```
@@ -131,9 +148,9 @@ Ensure that in `settings.py`, beam search configuration are uncommented and spec
     max_depth = 15
     chunk_size = 50
 ```
-Check `run_FlowER_large_(old|new)Data.sh` has `scripts/search.sh` or `sh scripts/search_multiGPU.sh` uncommented. 
+Check `run_FlowER_large_newData.sh` has `scripts/search.sh` uncommented. 
 ```bash
-$ sh run_FlowER_large_(old|new)Data.sh
+$ sh run_FlowER_large_newData.sh
 ```
 Visualize your route at `examples/vis_network.ipynb`
 
@@ -157,6 +174,33 @@ sion. This cutoff can filter out unlikely outcomes to be part of the selection.
 - **`chunk_size`** - Number of reactants sets to be run beam search concurrently.
 
 </details>
+
+## Conservation _(added May 29 2026)_
+Conservation experiments on the paper measures predicted output's conservation of mass and electron across all 30 output sample per input from the model. The reproduction scripts live in [`examples/conservation/`](examples/conservation/).
+
+Because FlowER and the SMILES-based baselines produce different outputs, conservation is measured two ways:
+
+- **FlowER** conserves by construction. During inference (`eval_multiGPU.py`) every reaction emits a 5-slot tally `[A, B, C, D, E]` at the start of its line in the prediction file, counting its `N` samples:
+  `A` correct (valid SMILES, matches target, conserved) · `B` valid SMILES, wrong product, still conserved · `C` valid SMILES, not conserved · `D` no valid SMILES, conserved · `E` no valid SMILES, not conserved.
+  The conservation metric is **`(A + B) / N`** averaged over reactions — the fraction of samples giving a valid molecule that also conserves electrons. Since FlowER conserves heavy atoms, protons and electrons alike, this single number stands in for all of them.
+- **Graph2SMILES / Molecular Transformer** only output raw SMILES, so conservation is **recomputed** from each predicted SMILES against the ground-truth product, giving four separate percentages: validity, heavy-atom, proton (H), and electron conservation.
+
+### Reproduce — FlowER
+Run inference on the test set to produce the prediction file (`<phase>-<sample_size>-<checkpoint>.txt` under `RESULT_PATH`), using **30 samples** to match the baselines (`SAMPLE_SIZE` is read from the environment):
+```bash
+export SAMPLE_SIZE=30
+sh run_FlowER_large_newData.sh        # with scripts/eval_multiGPU.sh uncommented
+python examples/conservation/flower_conservation.py <RESULT_PATH>/<prediction>.txt
+```
+
+### Reproduce — Graph2SMILES / Molecular Transformer
+Score a baseline prediction file (`nbest = 30` per input; each entry `SMILES_loglikelihood`, comma-separated) against the same ground-truth test set:
+```bash
+python examples/conservation/g2s_conservation.py \
+    --gt data/flower_new_dataset/test.txt \
+    --pred <baseline_predictions>.txt \
+    --nbest 30
+```
 
 ## Citation
 ```bibtex

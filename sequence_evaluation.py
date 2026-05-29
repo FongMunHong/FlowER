@@ -141,8 +141,8 @@ def reparse(line):
     return f"{metrics}|{not_sym}|{new_predictions}"
 
 
-with open("data/flower_dataset/test.txt") as gt_o, \
-    open("results/flower_dataset/best_hyperparam/result-32-1440000_47.txt") as result_o:
+with open("data/flower_new_dataset/test.txt") as gt_o, \
+    open("results/flower_new_dataset/best_large_hyperparam/result-32-2940000_97.txt") as result_o:
 
     # Preprocessing
     result = result_o.readlines()
